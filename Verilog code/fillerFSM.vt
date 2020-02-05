@@ -1,0 +1,82 @@
+module fillerFSM_tb ();
+	logic clk = 0;
+	logic rst = 0;
+	logic start = 0;
+	logic i_overflow = 0;
+	wire [2:0] A_sel;
+	wire [2:0] B_sel;
+	wire [7:0] reg_sel;
+	wire scratch_en, finish;
+	wire de_succ, dec_fail;
+	
+	memory_init_FSM DUT
+	(
+		.clk(clk), .rst(rst),
+		.inc_i(inc_i),
+		.scratch_en(scratch_en),
+		.A_sel(A_sel), .B_sel(B_sel),
+		.reg_sel(reg_sel),
+		.i_overflow(i_overflow),
+		.start(start), .finish(finish)
+	);
+	
+	wire [7:0] opr_A;
+	wire [7:0] opr_B;
+	wire [7:0] ALU_out;
+	wire [23:0] currentKey;
+	
+	logic [7:0] mem_out;
+	datapath_nomem ksa_DP
+	(
+		.clk(clk), .rst(rst),
+		.inc_i(inc_i), .inc_j(1'b0), .inc_k(1'b0),
+		.i_OF(i_overflow), .j_OF(), .k_OF(), .key_OF(),
+		.inc_key(1'b0), .load_key(1'b0), .SW_sel(1'b1),
+		.regsel_1hot(reg_sel),
+		.writeback_sel(writeback),
+		.A_sel(A_sel), .B_sel(B_sel),
+		.opmode(1'b0),
+		.scratch_en(scratch_en), .output_en(1'b0),
+		.validate_en(1'b0),
+		.SW_IN(10'b1001001001),
+		.dec_succ(), .dec_fail(),
+		.current_key(currentKey),
+		.opr_A(opr_A), .opr_B(opr_B), .ALU_out(ALU_out), .scratch_dout(mem_out)
+	);
+	
+	
+	logic [7:0] ramregs [255:0];
+	
+	always_ff @(posedge clk) begin
+		if (scratch_en)
+			ramregs [opr_A] <= opr_B;
+		else
+		if (force_en) begin
+			ramregs [I] <= I;
+		end
+	end
+	
+	always_ff @(posedge clk) begin
+		mem_out <= ramregs [opr_A];
+	end
+	
+	initial forever begin
+		#1;
+		clk = !clk;
+	end
+	
+	initial begin
+		#2;
+		rst = 1;
+		#2;
+		rst = 0;
+		#4;
+		start = 1;
+		#2;
+		start = 0;
+		@(posedge finish);
+		#20;
+		$stop;
+	end	
+	
+endmodule

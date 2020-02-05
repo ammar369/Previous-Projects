@@ -1,0 +1,113 @@
+module decryptFSM_tb ();
+	logic clk = 0;
+	logic rst = 0;
+	logic start = 0;
+	logic start2 = 0;
+	logic load_key = 0;
+	
+	wor [2:0] A_sel;
+	wor [2:0] B_sel;
+	wor [7:0] reg_sel;
+	wor [1:0] writeback;
+	
+	memory_shuffle_FSM DUT
+	(
+		.clk(clk), .rst(rst),
+		.inc_i(inc_i1),
+		.scratch_en(scratch_en1),
+		.A_sel(A_sel1), .B_sel(B_sel1),
+		.reg_sel(reg_sel1), .writeback(writeback1),
+		.i_overflow(i_overflow),
+		.opmode(opmode1),
+		.start(start), .finish(finish)
+	);
+	
+	// wires labeled __2 need to be OR'd with __1 before feeding into datapath
+	decryptor_FSM DUT
+	(
+		.clk(clk), .rst(rst),
+		.inc_i(inc_i2), .inc_k(inc_k),
+		.scratch_en(scratch_en2), .dec_en(dec_en),
+		.A_sel(A_sel2), .B_sel(B_sel2),
+		.reg_sel(reg_sel2), .writeback(writeback2),
+		.k_overflow(k_overflow),
+		.opmode(opmode2),
+		.start(start2), .finish(finish2)
+	);
+	
+	wire [7:0] opr_A;
+	wire [7:0] opr_B;
+	wire [7:0] ALU_out;
+	wire [23:0] currentKey;
+	
+	logic [7:0] mem_out;
+	datapath_nomem ksa_DP
+	(
+		.clk(clk), .rst(rst),
+		.inc_i(inc_i), .inc_j(1'b0), .inc_k(inc_k),
+		.i_OF(i_overflow), .j_OF(), .k_OF(k_overflow), .key_OF(),
+		.inc_key(1'b0), .load_key(load_key), .SW_sel(1'b1),
+		.regsel_1hot(reg_sel),
+		.writeback_sel(writeback),
+		.A_sel(A_sel), .B_sel(B_sel),
+		.opmode(opmode),
+		.scratch_en(scratch_en), .output_en(dec_en),
+		.validate_en(1'b0),
+		.SW_IN(10'b1001001001),
+		.dec_succ(), .dec_fail(),
+		.current_key(currentKey),
+		.opr_A(opr_A), .opr_B(opr_B), .ALU_out(ALU_out), .scratch_dout(mem_out)
+	);
+	
+	// RAM
+	logic force_en = 0;
+	logic [7:0] I;
+	
+	logic [7:0] ramregs [255:0];
+	
+	always_ff @(posedge clk) begin
+		if (scratch_en)
+			ramregs [opr_A] <= opr_B;
+		else
+		if (force_en) begin
+			ramregs [I] <= I;
+		end
+	end
+	
+	always_ff @(posedge clk) begin
+		mem_out <= ramregs [opr_A];
+	end
+	
+	initial forever begin
+		#1;
+		clk = !clk;
+	end
+	
+	
+	
+	initial begin
+		#2;
+		rst = 1;
+		#2;
+		rst = 0;
+		#2;
+		force_en = 1;
+		I = 0;
+		repeat (256) begin
+			#2;
+			I = I + 1;
+		end
+		force_en = 0;
+		#2;
+		load_key = 1;
+		#2;
+		load_key = 0;
+		start = 1;
+		#2;
+		start = 0;
+		@(posedge finish);
+		#20;
+		$stop;
+	end	
+	
+endmodule
