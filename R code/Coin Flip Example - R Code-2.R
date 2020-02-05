@@ -1,10 +1,3 @@
-# =========================================
-# This script is designed to help students
-# get started with basic R Programming.
-# 
-# We will use the context of conditional 
-# probability to introduce some syntax.
-# =========================================
 
 # Clear memory (run this line of code whenever you want to remove all your data, values and functions)
 rm(list=ls())
