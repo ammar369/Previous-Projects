@@ -1,3 +1,2 @@
-This includes written Python code for multiple projects
-including script for remote motor control and for multiple
-machine learning projects.
+This includes written R code for multiple projects
+mostly related to probability problems.
