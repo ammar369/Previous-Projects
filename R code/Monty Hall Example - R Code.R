@@ -1,8 +1,3 @@
-# =========================================
-# This script is designed to simulate the 
-# Monty Hall problem. 
-# =========================================
-
 # Clear memory (run this line of code whenever you want to remove all your data, values and functions)
 rm(list=ls())
 
