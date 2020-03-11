@@ -88,26 +88,3 @@ monty.hall.simulation(switch=TRUE)
 my.doors <- sample(c(1,2,3), 1, size=1000)
 monty.hall.simulation(n.games=1000, door=my.doors, switch=FALSE)
 monty.hall.simulation(n.games=1000, door=my.doors, switch=TRUE)
-
-# EXERCISE 1 (optional):
-# Can you write an R function with the following modification to the Monty Hall problem: the participant has a probibility 
-# of switching, and then based on this probability, it is determined whether the participant switches door or not.
-# What are the probabilities of winning for P(Switch) = 0.1, 0.2, ..., 0.9?
-
-# EXERCISE 2 (optional):
-# Can you write an R function to interactively allow the user to play the Monty Hall Problem?
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
